@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --background: #05060f;
   --surface: #101224;
   --surface-soft: #161a33;
@@ -9,6 +9,15 @@
   --border: rgba(98, 115, 149, 0.16);
   --shadow: 0 20px 40px rgba(31, 57, 105, 0.08);
 }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 html,
 body,
 #root {
@@ -18,13 +27,18 @@ body,
 body {
   margin: 0;
   padding: 0;
-  background: var(--background);
+  background: #0a0a0f;
   color: var(--text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 #root {
   width: 100%;
 }
 
-
+/* Page content offset for fixed navbar - but NOT for Rooms page */
+.page-content {
+  /* Rooms page handles its own layout */
+}
