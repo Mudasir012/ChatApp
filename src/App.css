@@ -1,0 +1,30 @@
+﻿:root {
+  --background: #05060f;
+  --surface: #101224;
+  --surface-soft: #161a33;
+  --text: #ffffff;
+  --paragraph-text: #afb8d5;
+  --muted: #7b8bbe;
+  --primary: #5a86ff;
+  --border: rgba(98, 115, 149, 0.16);
+  --shadow: 0 20px 40px rgba(31, 57, 105, 0.08);
+}
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+#root {
+  width: 100%;
+}
+
+

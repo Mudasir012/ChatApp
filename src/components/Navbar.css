@@ -1,0 +1,80 @@
+/* Navbar Container */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
+  padding: 0 20px;
+}
+
+/* Brand Section */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  font-size: 24px;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background-color: rgb(155, 0,0);
+}
+
+/* Navigation Links */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+/* NavLink Styling (fixed naming issue) */
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  transition: 0.2s ease;
+}
+
+.nav-link:hover {
+  opacity: 0.8;
+}
+
+/* Active Link */
+.nav-link.active {
+  border-bottom: 2px solid white;
+  transition: 0.2s ease-in-out;
+}
+
+/* Sign Buttons */
+.sign-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sign-options button {
+  padding: 12px 24px;
+  cursor: pointer;
+  border: none;
+  background: white;
+  color: black;
+  border-radius: 4px;
+  transition: 0.2s ease;
+}
+.sign-options button:nth-child(1){
+  background-color: rgb(155, 0, 0);
+  color: white;
+
+}
+.app-name h1{
+  margin: 0;
+}
+.app-name p{
+  margin: 0;
+}
+.sign-options button:hover {
+  opacity: 0.85;
+}
