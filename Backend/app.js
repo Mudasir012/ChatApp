@@ -30,6 +30,16 @@ app.use(cors({
   credentials: true,
 }));
 
+// Health check endpoint (moved to top to avoid being blocked by DB-dependent middleware)
+app.get("/api/health", (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+  res.json({ 
+    status: dbStatus === "connected" ? "ok" : "degraded", 
+    database: dbStatus,
+    timestamp: new Date().toISOString() 
+  });
+});
+
 app.use(express.json({ limit: "10mb" }));
 app.use(session({
   secret: process.env.SESSION_SECRET || "change_this_secret",
@@ -46,7 +56,7 @@ app.use(session({
     maxAge: 30 * 24 * 60 * 60 * 1000,
   },
 }));
-
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 

@@ -18,6 +18,17 @@ async function ensureDatabaseConnection() {
 const handler = serverless(app);
 
 module.exports = async (req, res) => {
-  await ensureDatabaseConnection();
+  // Bypass DB connection check for health route so it can always report status
+  if (req.url === "/api/health" || req.url === "/health") {
+    return handler(req, res);
+  }
+  
+  try {
+    await ensureDatabaseConnection();
+  } catch (err) {
+    console.error("Database connection error in handler:", err);
+    // We still call handler so it can return the health check if it matched (though we handled that above)
+    // or return a proper error through the app.
+  }
   return handler(req, res);
 };
