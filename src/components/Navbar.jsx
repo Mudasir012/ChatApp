@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import "./Navbar.css";
 
-export default function Navbar() {
+export default function Navbar({ user, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -12,13 +12,11 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu on route change
   const closeMenu = () => setMenuOpen(false);
 
   return (
     <header className={`navbar ${scrolled ? "navbar-scrolled" : ""}`}>
       <div className="navbar-inner">
-        {/* Brand */}
         <NavLink to="/" className="navbar-brand" onClick={closeMenu}>
           <div className="brand-mark">
             <span>C</span>
@@ -29,7 +27,6 @@ export default function Navbar() {
           </div>
         </NavLink>
 
-        {/* Desktop Nav */}
         <nav className={`nav-links ${menuOpen ? "nav-open" : ""}`}>
           <NavLink
             to="/"
@@ -47,20 +44,22 @@ export default function Navbar() {
             </span>
             Home
           </NavLink>
-          <NavLink
-            to="/rooms"
-            className={({ isActive }) =>
-              `nav-link ${isActive ? "active" : ""}`
-            }
-            onClick={closeMenu}
-          >
-            <span className="nav-link-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </span>
-            Rooms
-          </NavLink>
+          {user && (
+            <NavLink
+              to="/rooms"
+              className={({ isActive }) =>
+                `nav-link ${isActive ? "active" : ""}`
+              }
+              onClick={closeMenu}
+            >
+              <span className="nav-link-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+              Rooms
+            </NavLink>
+          )}
           <NavLink
             to="/about"
             className={({ isActive }) =>
@@ -77,25 +76,39 @@ export default function Navbar() {
             About
           </NavLink>
 
-          {/* Mobile-only auth buttons */}
           <div className="nav-auth-mobile">
-            <button className="btn-signin">Sign In</button>
-            <button className="btn-signup">Sign Up</button>
+            {!user ? (
+              <>
+                <Link className="btn-signin" to="/signin" onClick={closeMenu}>Sign In</Link>
+                <Link className="btn-signup" to="/signup" onClick={closeMenu}>Sign Up</Link>
+              </>
+            ) : (
+              <button className="btn-signup" onClick={() => { onLogout(); closeMenu(); }}>
+                Logout
+              </button>
+            )}
           </div>
         </nav>
 
-        {/* Desktop Auth */}
         <div className="nav-auth">
-          <button className="btn-signin">Sign In</button>
-          <button className="btn-signup">
-            Sign Up
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+          {!user ? (
+            <> 
+              <Link className="btn-signin" to="/signin">Sign In</Link>
+              <Link className="btn-signup" to="/signup">
+                Sign Up
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </Link>
+            </>
+          ) : (
+            <div className="nav-logged-in">
+              <span className="nav-username">{user.name || user.username}</span>
+              <button className="btn-signup" onClick={onLogout}>Logout</button>
+            </div>
+          )}
         </div>
 
-        {/* Hamburger */}
         <button
           className={`hamburger ${menuOpen ? "hamburger-open" : ""}`}
           onClick={() => setMenuOpen(!menuOpen)}
@@ -107,10 +120,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile overlay */}
-      {menuOpen && (
-        <div className="nav-overlay" onClick={closeMenu} />
-      )}
+      {menuOpen && <div className="nav-overlay" onClick={closeMenu} />}
     </header>
   );
 }

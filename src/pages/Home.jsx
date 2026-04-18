@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import "./Home.css";
 
-export default function Home() {
+export default function Home({ user }) {
   return (
     <>
       {/* ── HERO ── */}
@@ -32,8 +32,8 @@ export default function Home() {
             </p>
 
             <div className="hero-actions animate-fade-up" style={{ animationDelay: "240ms" }}>
-              <NavLink to="/rooms" className="btn-primary">
-                Explore Rooms
+              <NavLink to={user ? "/rooms" : "/signin"} className="btn-primary">
+                {user ? "Explore Rooms" : "Sign in to join"}
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -216,8 +216,8 @@ export default function Home() {
         <div className="cta-content">
           <h2 className="cta-title">Ready to find your community?</h2>
           <p className="cta-sub">Jump into a room, start a server, or just lurk. No pressure.</p>
-          <NavLink to="/rooms" className="btn-primary btn-large">
-            Get started — it's free
+          <NavLink to={user ? "/rooms" : "/signin"} className="btn-primary btn-large">
+            {user ? "Get started — it's free" : "Sign in to start"}
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

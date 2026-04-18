@@ -1,100 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { getMessages, postMessage, searchUsers, getGroups, createGroup, createBoard, getDMs, createDM } from "../utils/api";
+import useDebounce from "../hooks/useDebounce";
 import "./Room.css";
 
-/* ─── DATA ─────────────────────────────────── */
-const groups = [
-  {
-    id: 1, name: "Dev Server", icon: "⚡", description: "Engineering & shipping",
-    boards: [
-      { id: 1, name: "general",     topic: "Team updates & announcements", unread: 2,  pinned: true  },
-      { id: 2, name: "development", topic: "Feature work and code reviews",  unread: 1,  pinned: false },
-      { id: 3, name: "design",      topic: "UI ideas, mockups & assets",      unread: 0,  pinned: false },
-      { id: 4, name: "random",      topic: "Memes, music, and vibes",         unread: 5,  pinned: false },
-    ],
-  },
-  {
-    id: 2, name: "Product", icon: "🚀", description: "Launches & planning",
-    boards: [
-      { id: 5, name: "sprint-plan",   topic: "Daily goals and sprint planning", unread: 0, pinned: false },
-      { id: 6, name: "release-notes", topic: "Deploys and changelog",           unread: 0, pinned: false },
-      { id: 7, name: "support",       topic: "Bug reports and fixes",           unread: 3, pinned: true  },
-    ],
-  },
-  {
-    id: 3, name: "Community", icon: "🌐", description: "Open for all",
-    boards: [
-      { id: 8,  name: "announcements", topic: "Server news",          unread: 0, pinned: true  },
-      { id: 9,  name: "meetups",       topic: "Events and hangouts",  unread: 2, pinned: false },
-      { id: 10, name: "memes",         topic: "Fun stuff from team",  unread: 6, pinned: false },
-    ],
-  },
-];
-
-const dms = [
-  { id: 1, name: "Ali Khan",      online: true,  avatar: "https://i.pravatar.cc/40?img=1",  status: "Coding something cool" },
-  { id: 2, name: "Sara Ahmed",    online: false, avatar: "https://i.pravatar.cc/40?img=2",  status: "Away" },
-  { id: 3, name: "Usman Tariq",   online: true,  avatar: "https://i.pravatar.cc/40?img=3",  status: "In a meeting" },
-  { id: 4, name: "Project Team",  online: false, avatar: "https://i.pravatar.cc/40?img=4",  status: "5 members" },
-  { id: 5, name: "Hassan Raza",   online: false, avatar: "https://i.pravatar.cc/40?img=5",  status: "Offline" },
-];
-
-const QUICK_REPLIES = [
-  "That sounds awesome! 🎉", "Got it, thanks! 👍", "I'll look into that.",
-  "Haha, nice one! 😂", "Let me check and get back to you.",
-  "Perfect, let's do it! 🚀", "Interesting... tell me more!", "On it! Give me a sec.",
-];
-
+const QUICK_REPLIES = ["That sounds awesome! 🎉", "Got it, thanks! 👍", "I'll look into that.", "Perfect, let's do it! 🚀"];
 const EMOJI_SET = ["👍", "❤️", "😂", "🔥", "🎉", "👀"];
 const QUICK_EMOJIS = ["😊", "😂", "👍", "🔥", "🎉", "💬", "❤️", "🚀"];
 
-const seedMessages = (key, msgs) =>
-  msgs.map((m, i) => ({ ...m, id: i + 1, reactions: {} }));
-
-const initialMessages = {
-  "channel-1": seedMessages("c1", [
-    { sender: "Ali Khan", text: "Welcome to #general. Share your updates here.", time: "10:30 AM", avatar: "https://i.pravatar.cc/40?img=1", isOwn: false },
-    { sender: "You",      text: "Just finished the sidebar adjustments 🙌", time: "10:32 AM", avatar: "https://i.pravatar.cc/40?img=10", isOwn: true  },
-    { sender: "Sara Ahmed", text: "This feels much more like a real server now!", time: "10:33 AM", avatar: "https://i.pravatar.cc/40?img=2", isOwn: false },
-    { sender: "Sara Ahmed", text: "Great work on the dark theme too 🌙", time: "10:33 AM", avatar: "https://i.pravatar.cc/40?img=2", isOwn: false },
-  ]),
-  "channel-2": seedMessages("c2", [
-    { sender: "Dev Bot", text: "PR #42 is ready for review.", time: "9:15 AM", avatar: "https://i.pravatar.cc/40?img=8", isOwn: false },
-    { sender: "You",     text: "I'll review it before standup.", time: "9:20 AM", avatar: "https://i.pravatar.cc/40?img=10", isOwn: true  },
-    { sender: "Dev Bot", text: "Reminder: standup in 10 minutes!", time: "9:50 AM", avatar: "https://i.pravatar.cc/40?img=8", isOwn: false },
-  ]),
-  "channel-3": seedMessages("c3", [
-    { sender: "Design Lead", text: "Mockups are uploaded to Figma.", time: "11:00 AM", avatar: "https://i.pravatar.cc/40?img=12", isOwn: false },
-  ]),
-  "channel-4": seedMessages("c4", [
-    { sender: "Hassan Raza", text: "Who's up for a quick game later?", time: "Yesterday", avatar: "https://i.pravatar.cc/40?img=5", isOwn: false },
-    { sender: "You",         text: "Count me in!",                      time: "Yesterday", avatar: "https://i.pravatar.cc/40?img=10", isOwn: true  },
-  ]),
-  "channel-7": seedMessages("c7", [
-    { sender: "Usman Tariq", text: "Found a bug in the login flow — will file a ticket.", time: "2:00 PM", avatar: "https://i.pravatar.cc/40?img=3", isOwn: false },
-    { sender: "You",         text: "Got it, I'll look into it now.",                      time: "2:05 PM", avatar: "https://i.pravatar.cc/40?img=10", isOwn: true  },
-    { sender: "Usman Tariq", text: "Ticket #88 filed. Thanks!", time: "2:10 PM", avatar: "https://i.pravatar.cc/40?img=3", isOwn: false },
-  ]),
-  "dm-1": seedMessages("d1", [
-    { sender: "Ali Khan", text: "Hey! How's the project going?",           time: "10:30 AM", avatar: "https://i.pravatar.cc/40?img=1", isOwn: false },
-    { sender: "You",      text: "Going great! Just finished the UI work.",  time: "10:32 AM", avatar: "https://i.pravatar.cc/40?img=10", isOwn: true  },
-    { sender: "Ali Khan", text: "Nice. Push it to staging when ready 👍",   time: "10:34 AM", avatar: "https://i.pravatar.cc/40?img=1", isOwn: false },
-  ]),
-  "dm-2": seedMessages("d2", [
-    { sender: "Sara Ahmed", text: "Did you see the new design specs?", time: "9:15 AM", avatar: "https://i.pravatar.cc/40?img=2", isOwn: false },
-  ]),
-  "dm-3": seedMessages("d3", [
-    { sender: "Usman Tariq", text: "Meeting at 3pm today?", time: "11:00 AM", avatar: "https://i.pravatar.cc/40?img=3", isOwn: false },
-    { sender: "You",         text: "Yep, I'll be there!",    time: "11:01 AM", avatar: "https://i.pravatar.cc/40?img=10", isOwn: true  },
-  ]),
-  "dm-4": seedMessages("d4", [
-    { sender: "Project Team", text: "Check out this new framework I found!", time: "Yesterday", avatar: "https://i.pravatar.cc/40?img=4", isOwn: false },
-  ]),
-  "dm-5": seedMessages("d5", [
-    { sender: "Hassan Raza", text: "Hey, long time no see!", time: "2 days ago", avatar: "https://i.pravatar.cc/40?img=5", isOwn: false },
-  ]),
-};
-
-/* ─── HELPERS ──────────────────────────────── */
+/* ─── HELPERS ─── */
 const getCurrentTime = () => {
   const now = new Date();
   let h = now.getHours();
@@ -104,60 +17,99 @@ const getCurrentTime = () => {
   return `${h}:${m} ${ap}`;
 };
 
-const getLastMessage = (messages, roomKey) => {
-  const msgs = messages[roomKey];
-  if (!msgs?.length) return "No messages yet";
-  const last = msgs[msgs.length - 1];
-  const t = (last.isOwn ? "You: " : "") + last.text;
-  return t.length > 28 ? t.slice(0, 28) + "…" : t;
+const isGrouped = (msgs, idx) => {
+  if (idx === 0) return false;
+  return msgs[idx].sender?._id === msgs[idx - 1].sender?._id;
 };
 
-/* ─── COMPONENT ────────────────────────────── */
-export default function Rooms() {
-  const [activeRoom, setActiveRoom]       = useState({ type: "channel", id: 1 });
-  const [selectedGroupId, setSelectedGroupId] = useState(1);
-  const [activePanel, setActivePanel]     = useState("group");
-  const [messages, setMessages]           = useState(initialMessages);
-  const [inputValue, setInputValue]       = useState("");
-  const [searchQuery, setSearchQuery]     = useState("");
-  const [isTyping, setIsTyping]           = useState(false);
+/* ─── COMPONENT ─── */
+export default function Rooms({ user }) {
+  const [activeRoom, setActiveRoom] = useState({ type: null, id: null });
+  const [selectedGroupId, setSelectedGroupId] = useState(null);
+  const [activePanel, setActivePanel] = useState("dms");
+  
+  const [groups, setGroups] = useState([]);
+  const [dms, setDms] = useState([]);
+  const [messages, setMessages] = useState({});
+  const [inputValue, setInputValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const debouncedQuery = useDebounce(searchQuery, 300);
+
+  const [isTyping, setIsTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showJumpPill, setShowJumpPill]   = useState(false);
-  const [unreadCounts, setUnreadCounts]   = useState(() => {
-    const map = {};
-    groups.forEach(g => g.boards.forEach(b => { map[`channel-${b.id}`] = b.unread; }));
-    dms.forEach(d => { map[`dm-${d.id}`] = d.unread || 0; });
-    return map;
-  });
+  const [showJumpPill, setShowJumpPill] = useState(false);
 
-  const messagesEndRef    = useRef(null);
+  // Modals
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [showBoardModal, setShowBoardModal] = useState(false);
+  const [newGroupForm, setNewGroupForm] = useState({ name: "", description: "", icon: "🌐", memberSearch: "", selectedMembers: [] });
+  const [newGroupResults, setNewGroupResults] = useState([]);
+  const debouncedGroupSearch = useDebounce(newGroupForm.memberSearch, 300);
+  const [newBoardForm, setNewBoardForm] = useState({ name: "", topic: "", icon: "#" });
+
+  const messagesEndRef = useRef(null);
   const messagesScrollRef = useRef(null);
-  const inputRef          = useRef(null);
+  const inputRef = useRef(null);
 
-  const activeRoomKey = `${activeRoom.type}-${activeRoom.id}`;
+  const activeRoomKey = activeRoom.id ? `${activeRoom.type}-${activeRoom.id}` : null;
 
-  const allBoards      = groups.flatMap(g => g.boards);
-  const selectedGroup  = groups.find(g => g.id === selectedGroupId);
-  const activatedRoom  = activeRoom.type === "channel"
-    ? allBoards.find(b => b.id === activeRoom.id)
-    : dms.find(d => d.id === activeRoom.id);
+  /* Data Fetching */
+  const refreshSidebar = useCallback(async () => {
+    try {
+      const [fetchedGroups, fetchedDMs] = await Promise.all([getGroups(), getDMs()]);
+      setGroups(fetchedGroups || []);
+      setDms(fetchedDMs || []);
+      
+      // Auto-select first DM if nothing selected
+      if (!activeRoom.id && fetchedDMs?.length > 0) {
+        setActiveRoom({ type: "dm", id: fetchedDMs[0]._id });
+      }
+    } catch (err) {
+      console.error("Failed to fetch sidebar data:", err);
+    }
+  }, [activeRoom.id]);
 
-  const normalizedQuery = searchQuery.toLowerCase();
-  const filteredDms     = dms.filter(d => d.name.toLowerCase().includes(normalizedQuery));
+  useEffect(() => { refreshSidebar(); }, [refreshSidebar]);
 
-  /* clear unread on room switch */
   useEffect(() => {
-    setUnreadCounts(prev => ({ ...prev, [activeRoomKey]: 0 }));
+    if (!activeRoomKey) return;
+    const fetchRoomMessages = async () => {
+      try {
+        const roomMessages = await getMessages(activeRoomKey);
+        if (Array.isArray(roomMessages)) {
+          setMessages(prev => ({ ...prev, [activeRoomKey]: roomMessages }));
+        }
+      } catch (err) {
+        console.error("Failed to load room messages:", err);
+      }
+    };
+    fetchRoomMessages();
   }, [activeRoomKey]);
 
-  /* scroll to bottom */
+  useEffect(() => {
+    if (activePanel === "dms" && debouncedQuery) {
+      searchUsers(debouncedQuery).then(setSearchResults).catch(console.error);
+    } else {
+      setSearchResults([]);
+    }
+  }, [debouncedQuery, activePanel]);
+
+  useEffect(() => {
+    if (debouncedGroupSearch) {
+      searchUsers(debouncedGroupSearch).then(setNewGroupResults).catch(console.error);
+    } else {
+      setNewGroupResults([]);
+    }
+  }, [debouncedGroupSearch]);
+
+  /* Scrolling */
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, []);
 
   useEffect(() => { scrollToBottom(); }, [messages, activeRoomKey, scrollToBottom]);
 
-  /* jump pill */
   useEffect(() => {
     const el = messagesScrollRef.current;
     if (!el) return;
@@ -169,91 +121,76 @@ export default function Rooms() {
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* focus input on room switch */
   useEffect(() => { inputRef.current?.focus(); }, [activeRoom.id]);
 
-  /* navigation */
+  /* Navigation */
   const handleGroupClick = (groupId) => {
-    const group = groups.find(g => g.id === groupId);
+    const group = groups.find(g => g._id === groupId);
     if (!group) return;
     setSelectedGroupId(groupId);
     setActivePanel("group");
-    setActiveRoom({ type: "channel", id: group.boards[0].id });
+    if (group.boards?.length > 0) {
+      setActiveRoom({ type: "channel", id: group.boards[0]._id });
+    } else {
+      setActiveRoom({ type: null, id: null });
+    }
     setSearchQuery("");
   };
 
   const openDMPanel = () => {
     setActivePanel("dms");
     setSelectedGroupId(null);
-    setActiveRoom({ type: "dm", id: dms[0].id });
+    if (dms.length > 0) setActiveRoom({ type: "dm", id: dms[0]._id });
+    else setActiveRoom({ type: null, id: null });
     setSearchQuery("");
   };
 
-  /* send message */
+  const handleStartDM = async (targetUser) => {
+    try {
+      const dm = await createDM(targetUser._id);
+      await refreshSidebar();
+      setActiveRoom({ type: "dm", id: dm._id });
+      setSearchQuery("");
+    } catch (err) {
+      console.error("Failed to start DM:", err);
+    }
+  };
+
+  /* Sending Messages */
   const handleSend = () => {
-    if (!inputValue.trim()) return;
-    const newMsg = {
-      id: Date.now(),
-      sender: "You",
-      text: inputValue.trim(),
+    if (!inputValue.trim() || !activeRoomKey) return;
+    const messageText = inputValue.trim();
+    
+    // Optimistic UI update
+    const tempMsg = {
+      _id: Date.now().toString(),
+      sender: user,
+      text: messageText,
       time: getCurrentTime(),
-      avatar: "https://i.pravatar.cc/40?img=10",
-      isOwn: true,
-      reactions: {},
+      reactions: {}
     };
+
     setMessages(prev => ({
       ...prev,
-      [activeRoomKey]: [...(prev[activeRoomKey] || []), newMsg],
+      [activeRoomKey]: [...(prev[activeRoomKey] || []), tempMsg],
     }));
     setInputValue("");
     setShowEmojiPicker(false);
 
-    if (activatedRoom) {
-      setIsTyping(true);
-      const delay = 900 + Math.random() * 1600;
-      setTimeout(() => {
-        setIsTyping(false);
-        const reply = {
-          id: Date.now() + 1,
-          sender: activeRoom.type === "channel" ? "Server Bot" : activatedRoom.name,
-          text: QUICK_REPLIES[Math.floor(Math.random() * QUICK_REPLIES.length)],
-          time: getCurrentTime(),
-          avatar: activeRoom.type === "channel" ? "https://i.pravatar.cc/40?img=15" : activatedRoom.avatar,
-          isOwn: false,
-          reactions: {},
-        };
+    postMessage({ roomKey: activeRoomKey, text: messageText })
+      .then(saved => {
         setMessages(prev => ({
           ...prev,
-          [activeRoomKey]: [...(prev[activeRoomKey] || []), reply],
+          [activeRoomKey]: prev[activeRoomKey].map(msg =>
+            msg._id === tempMsg._id ? saved : msg
+          ),
         }));
-      }, delay);
-    }
+      })
+      .catch(err => console.error("Failed to save message:", err));
   };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
-  };
-
-  /* react to message */
-  const handleReact = (msgId, emoji) => {
-    setMessages(prev => {
-      const msgs = prev[activeRoomKey] || [];
-      return {
-        ...prev,
-        [activeRoomKey]: msgs.map(msg => {
-          if (msg.id !== msgId) return msg;
-          const reactions = { ...msg.reactions };
-          if (!reactions[emoji]) reactions[emoji] = { count: 0, mine: false };
-          if (reactions[emoji].mine) {
-            reactions[emoji] = { count: reactions[emoji].count - 1, mine: false };
-            if (reactions[emoji].count === 0) delete reactions[emoji];
-          } else {
-            reactions[emoji] = { count: reactions[emoji].count + 1, mine: true };
-          }
-          return { ...msg, reactions };
-        }),
-      };
-    });
   };
 
   const addEmoji = (emoji) => {
@@ -261,32 +198,65 @@ export default function Rooms() {
     inputRef.current?.focus();
   };
 
-  /* total unread per group */
-  const groupUnread = (groupId) => {
-    const g = groups.find(x => x.id === groupId);
-    if (!g) return 0;
-    return g.boards.reduce((sum, b) => sum + (unreadCounts[`channel-${b.id}`] || 0), 0);
+  /* Modals */
+  const submitCreateGroup = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        name: newGroupForm.name,
+        description: newGroupForm.description,
+        icon: newGroupForm.icon,
+        members: newGroupForm.selectedMembers.map(m => m._id)
+      };
+      const newGroup = await createGroup(payload);
+      setShowGroupModal(false);
+      setNewGroupForm({ name: "", description: "", icon: "🌐", memberSearch: "", selectedMembers: [] });
+      await refreshSidebar();
+      handleGroupClick(newGroup._id);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const dmTotalUnread = dms.reduce((sum, d) => sum + (unreadCounts[`dm-${d.id}`] || 0), 0);
-
-  /* message grouping helper */
-  const isGrouped = (msgs, idx) => {
-    if (idx === 0) return false;
-    return msgs[idx].sender === msgs[idx - 1].sender &&
-      msgs[idx].isOwn === msgs[idx - 1].isOwn;
+  const submitCreateBoard = async (e) => {
+    e.preventDefault();
+    if (!selectedGroupId) return;
+    try {
+      const payload = {
+        name: newBoardForm.name,
+        topic: newBoardForm.topic,
+        icon: newBoardForm.icon
+      };
+      const newBoard = await createBoard(selectedGroupId, payload);
+      setShowBoardModal(false);
+      setNewBoardForm({ name: "", topic: "", icon: "#" });
+      await refreshSidebar();
+      setActiveRoom({ type: "channel", id: newBoard._id });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  /* online count */
-  const onlineCount = dms.filter(d => d.online).length;
+  /* Data Lookups */
+  const allBoards = groups.flatMap(g => g.boards || []);
+  const selectedGroup = groups.find(g => g._id === selectedGroupId);
+  let activatedRoom = null;
+  if (activeRoom.type === "channel") {
+    activatedRoom = allBoards.find(b => b._id === activeRoom.id);
+  } else if (activeRoom.type === "dm") {
+    const dm = dms.find(d => d._id === activeRoom.id);
+    if (dm) {
+      const otherUser = dm.participants.find(p => p._id !== user.id) || dm.participants[0];
+      activatedRoom = { ...dm, name: otherUser.name || otherUser.username, avatar: otherUser.avatar, status: otherUser.status };
+    }
+  }
 
-  /* boards filtered */
+  const normalizedQuery = searchQuery.toLowerCase();
   const filteredBoards = (selectedGroup?.boards || []).filter(b =>
-    b.name.toLowerCase().includes(normalizedQuery) ||
-    b.topic.toLowerCase().includes(normalizedQuery)
+    b.name.toLowerCase().includes(normalizedQuery) || b.topic.toLowerCase().includes(normalizedQuery)
   );
-
-  /* ── RENDER ── */
+  
+  // Render
   return (
     <section className="rooms-page">
       <div className="rooms-bg">
@@ -302,61 +272,37 @@ export default function Rooms() {
           {/* Primary strip */}
           <div className="sidebar-primary">
             <div className="sidebar-logo">⚡</div>
-
             <div className="group-list">
-              {groups.map(group => {
-                const u = groupUnread(group.id);
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    className={`group-item ${selectedGroupId === group.id && activePanel === "group" ? "active" : ""}`}
-                    onClick={() => handleGroupClick(group.id)}
-                    title={group.name}
-                    style={{ position: "relative" }}
-                  >
-                    <span>{group.icon}</span>
-                    {u > 0 && (
-                      <span style={{
-                        position: "absolute", top: -3, right: -3,
-                        background: "var(--red)", color: "#fff",
-                        fontSize: 9, fontWeight: 700,
-                        width: 16, height: 16, borderRadius: "50%",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        border: "2px solid var(--bg-deep)", fontFamily: "var(--font-display)",
-                      }}>{u > 9 ? "9+" : u}</span>
-                    )}
-                  </button>
-                );
-              })}
+              {groups.map(group => (
+                <button
+                  key={group._id}
+                  type="button"
+                  className={`group-item ${selectedGroupId === group._id && activePanel === "group" ? "active" : ""}`}
+                  onClick={() => handleGroupClick(group._id)}
+                  title={group.name}
+                >
+                  <span>{group.icon}</span>
+                </button>
+              ))}
+              
+              <button className="group-item" onClick={() => setShowGroupModal(true)} title="Add Group" style={{ background: "rgba(255,255,255,0.05)", border: "1px dashed rgba(255,255,255,0.2)" }}>
+                <span>+</span>
+              </button>
 
               <div className="group-divider" />
-
               <button
                 type="button"
                 className={`dm-toggle ${activePanel === "dms" ? "active" : ""}`}
                 onClick={openDMPanel}
                 title="Direct Messages"
-                style={{ position: "relative" }}
               >
                 DM
-                {dmTotalUnread > 0 && (
-                  <span style={{
-                    position: "absolute", top: -3, right: -3,
-                    background: "var(--red)", color: "#fff",
-                    fontSize: 9, fontWeight: 700,
-                    width: 16, height: 16, borderRadius: "50%",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    border: "2px solid var(--bg-deep)", fontFamily: "var(--font-display)",
-                  }}>{dmTotalUnread > 9 ? "9+" : dmTotalUnread}</span>
-                )}
               </button>
             </div>
-
-            {/* User avatar at bottom */}
+            {/* User avatar */}
             <div style={{ marginTop: "auto", padding: "0 0 4px" }}>
-              <div className="chat-avatar-wrap" style={{ cursor: "pointer" }}>
-                <img className="chat-avatar" src="https://i.pravatar.cc/40?img=10" alt="You" />
+              <div className="chat-avatar-wrap">
+                <img className="chat-avatar" src={user.avatar} alt="You" />
                 <span className="status-indicator online" />
               </div>
             </div>
@@ -370,12 +316,12 @@ export default function Rooms() {
                   {activePanel === "dms" ? "Messages" : selectedGroup?.name || "Channels"}
                 </p>
                 <p className="workspace-subtitle">
-                  {activePanel === "dms"
-                    ? `${onlineCount} online now`
-                    : selectedGroup?.description || "Pick a board"}
+                  {activePanel === "dms" ? `${dms.length} conversations` : selectedGroup?.description || "Pick a board"}
                 </p>
               </div>
-              <button className="workspace-action" title="New">+</button>
+              {activePanel === "group" && (
+                <button className="workspace-action" onClick={() => setShowBoardModal(true)} title="New Board">+</button>
+              )}
             </div>
 
             <div className="sidebar-search">
@@ -385,7 +331,7 @@ export default function Rooms() {
               </svg>
               <input
                 type="text"
-                placeholder={activePanel === "dms" ? "Search people…" : "Search channels…"}
+                placeholder={activePanel === "dms" ? "Search users to DM…" : "Search channels…"}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="search-input"
@@ -394,45 +340,58 @@ export default function Rooms() {
 
             <div className="panel-list">
               {activePanel === "dms" ? (
-                filteredDms.length > 0 ? filteredDms.map(chat => (
-                  <button
-                    key={chat.id}
-                    type="button"
-                    className={`panel-item ${activeRoom.type === "dm" && activeRoom.id === chat.id ? "active" : ""}`}
-                    onClick={() => { setActiveRoom({ type: "dm", id: chat.id }); }}
-                  >
-                    <div className="chat-avatar-wrap">
-                      <img className="chat-avatar" src={chat.avatar} alt={chat.name} />
-                      <span className={`status-indicator ${chat.online ? "online" : "offline"}`} />
-                    </div>
-                    <div className="panel-item-info">
-                      <span className="panel-item-title">{chat.name}</span>
-                      <span className="panel-item-meta">{getLastMessage(messages, `dm-${chat.id}`)}</span>
-                    </div>
-                    {(unreadCounts[`dm-${chat.id}`] || 0) > 0 &&
-                      <div className="channel-badge">{unreadCounts[`dm-${chat.id}`]}</div>}
-                  </button>
-                )) : (
-                  <div className="no-results">No conversations found</div>
-                )
+                <>
+                  {searchResults.length > 0 && searchQuery && (
+                    <div style={{ padding: "10px", fontSize: "12px", color: "var(--primary)", fontWeight: "bold" }}>Search Results</div>
+                  )}
+                  {searchResults.map(u => (
+                    <button key={u._id} className="search-result-item" onClick={() => handleStartDM(u)}>
+                      <img src={u.avatar} alt={u.name} />
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className="name">{u.name || u.username}</span>
+                        <span className="username">@{u.username}</span>
+                      </div>
+                    </button>
+                  ))}
+                  {searchQuery && searchResults.length === 0 && <div className="no-results">No users found</div>}
+
+                  {!searchQuery && dms.length > 0 && dms.map(chat => {
+                    const otherUser = chat.participants.find(p => p._id !== user.id) || chat.participants[0];
+                    return (
+                      <button
+                        key={chat._id}
+                        type="button"
+                        className={`panel-item ${activeRoom.type === "dm" && activeRoom.id === chat._id ? "active" : ""}`}
+                        onClick={() => setActiveRoom({ type: "dm", id: chat._id })}
+                      >
+                        <div className="chat-avatar-wrap">
+                          <img className="chat-avatar" src={otherUser?.avatar} alt={otherUser?.name} />
+                          <span className="status-indicator online" />
+                        </div>
+                        <div className="panel-item-info">
+                          <span className="panel-item-title">{otherUser?.name || otherUser?.username}</span>
+                          <span className="panel-item-meta">{otherUser?.status || "Hey there!"}</span>
+                        </div>
+                      </button>
+                    )
+                  })}
+                  {!searchQuery && dms.length === 0 && <div className="no-results">No recent messages</div>}
+                </>
               ) : (
                 filteredBoards.length > 0 ? filteredBoards.map(board => (
                   <button
-                    key={board.id}
+                    key={board._id}
                     type="button"
-                    className={`panel-item ${activeRoom.type === "channel" && activeRoom.id === board.id ? "active" : ""}`}
-                    onClick={() => setActiveRoom({ type: "channel", id: board.id })}
+                    className={`panel-item ${activeRoom.type === "channel" && activeRoom.id === board._id ? "active" : ""}`}
+                    onClick={() => setActiveRoom({ type: "channel", id: board._id })}
                   >
                     <div className="panel-item-info">
                       <span className="panel-item-title" style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                        <span style={{ color: "var(--text-3)", fontSize: 11, fontWeight: 400 }}>#</span>
+                        <span style={{ color: "var(--text-3)", fontSize: 13, fontWeight: 400 }}>{board.icon}</span>
                         {board.name}
-                        {board.pinned && <span style={{ fontSize: 10, opacity: 0.5, marginLeft: 2 }}>📌</span>}
                       </span>
                       <span className="panel-item-meta">{board.topic}</span>
                     </div>
-                    {(unreadCounts[`channel-${board.id}`] || 0) > 0 &&
-                      <div className="channel-badge">{unreadCounts[`channel-${board.id}`]}</div>}
                   </button>
                 )) : (
                   <div className="no-results">No channels found</div>
@@ -443,17 +402,13 @@ export default function Rooms() {
             <div className="sidebar-footer">
               <div className="sidebar-footer-left">
                 <div className="chat-avatar-wrap">
-                  <img className="chat-avatar" src="https://i.pravatar.cc/40?img=10" alt="You" />
+                  <img className="chat-avatar" src={user.avatar} alt="You" />
                   <span className="status-indicator online" />
                 </div>
                 <div className="sidebar-footer-info">
-                  <div className="footer-name">Mudasir</div>
-                  <div className="footer-status">● Online</div>
+                  <div className="footer-name">{user.name || user.username}</div>
+                  <div className="footer-status">{user.status || "Online"}</div>
                 </div>
-              </div>
-              <div className="sidebar-footer-actions">
-                <button className="action-btn" title="Mute">🎙</button>
-                <button className="action-btn" title="Settings">⚙️</button>
               </div>
             </div>
           </div>
@@ -462,170 +417,69 @@ export default function Rooms() {
         {/* ════ CHAT AREA ════ */}
         <div className="chat-area">
           <div className="chat-body">
+            {activeRoomKey ? (
             <div className="chat-panel">
-
-              {/* Header */}
               <div className="chat-header">
                 <div className="header-left">
                   <div className="header-channel-icon">
                     {activeRoom.type === "channel"
-                      ? <span style={{ color: "var(--text-3)", fontSize: 13, fontWeight: 400 }}>#</span>
+                      ? <span style={{ color: "var(--text-3)", fontSize: 16 }}>{activatedRoom?.icon || "#"}</span>
                       : activatedRoom?.avatar
                         ? <img src={activatedRoom.avatar} alt="" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }} />
                         : "?"}
                   </div>
                   <div className="header-info">
                     <h2 className="header-name">
-                      {activeRoom.type === "channel"
-                        ? activatedRoom?.name || "general"
-                        : activatedRoom?.name || "DM"}
+                      {activatedRoom?.name || "general"}
                     </h2>
                     <p className="header-status">
-                      {activeRoom.type === "channel" ? (
-                        activatedRoom?.topic
-                      ) : (
-                        <>
-                          {activatedRoom?.online && <span className="header-online-dot" />}
-                          {activatedRoom?.status}
-                        </>
-                      )}
+                      {activeRoom.type === "channel" ? activatedRoom?.topic : activatedRoom?.status}
                     </p>
                   </div>
-                </div>
-                <div className="header-actions">
-                  <button className="header-btn" title="Members">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
-                      <path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.87" strokeLinecap="round"/>
-                    </svg>
-                    <span style={{ fontSize: 11, fontFamily: "var(--font-display)" }}>
-                      {onlineCount} online
-                    </span>
-                  </button>
-                  <div className="header-divider" />
-                  <button className="header-btn" title="Search">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="11" cy="11" r="7"/>
-                      <path d="M16 16L21 21" strokeLinecap="round"/>
-                    </svg>
-                  </button>
-                  <button className="header-btn" title="Settings">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="3"/>
-                      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
                 </div>
               </div>
 
               {/* Messages */}
               <div className="messages-container" ref={messagesScrollRef}>
-                {/* Channel intro */}
-                {(messages[activeRoomKey]?.length || 0) > 0 && (
-                  <div className="chat-beginning">
-                    <div className="beginning-icon">
-                      {activeRoom.type === "channel" ? "#" : activatedRoom?.avatar
-                        ? <img src={activatedRoom.avatar} alt="" style={{ width: 36, height: 36, borderRadius: "50%" }} />
-                        : "💬"}
-                    </div>
-                    <h3>
-                      {activeRoom.type === "channel"
-                        ? `Welcome to #${activatedRoom?.name}`
-                        : `Chat with ${activatedRoom?.name}`}
-                    </h3>
-                    <p>
-                      {activeRoom.type === "channel"
-                        ? activatedRoom?.topic
-                        : "Your direct messages are just between you two."}
-                    </p>
+                <div className="chat-beginning">
+                  <div className="beginning-icon">
+                    {activeRoom.type === "channel" ? activatedRoom?.icon : activatedRoom?.avatar
+                      ? <img src={activatedRoom.avatar} alt="" style={{ width: 36, height: 36, borderRadius: "50%" }} />
+                      : "💬"}
                   </div>
-                )}
+                  <h3>
+                    {activeRoom.type === "channel" ? `Welcome to ${activatedRoom?.name}` : `Chat with ${activatedRoom?.name}`}
+                  </h3>
+                  <p>This is the start of your conversation.</p>
+                </div>
 
-                {/* Empty state */}
-                {(!messages[activeRoomKey] || messages[activeRoomKey].length === 0) && (
-                  <div className="chat-beginning">
-                    <div className="beginning-icon">💬</div>
-                    <h3>Start the conversation</h3>
-                    <p>Be the first to say something in {activeRoom.type === "channel" ? `#${activatedRoom?.name}` : activatedRoom?.name}</p>
-                  </div>
-                )}
+                <div className="date-divider">History</div>
 
-                <div className="date-divider">Today</div>
-
-                {/* Message list */}
                 {(messages[activeRoomKey] || []).map((message, idx, arr) => {
                   const grouped = isGrouped(arr, idx);
+                  const isOwn = message.sender?._id === user.id;
+                  
                   return (
-                    <div
-                      key={message.id}
-                      className={`message-group ${message.isOwn ? "own" : ""} ${grouped ? "grouped" : ""}`}
-                    >
-                      {!grouped
-                        ? <img className="message-avatar" src={message.avatar} alt={message.sender} />
-                        : <div className="avatar-ghost" />}
+                    <div key={message._id} className={`message-group ${isOwn ? "own" : ""} ${grouped ? "grouped" : ""}`}>
+                      {!grouped ? <img className="message-avatar" src={message.sender?.avatar} alt={message.sender?.name} /> : <div className="avatar-ghost" />}
                       <div className="message-content">
                         {!grouped && (
                           <div className="message-meta">
-                            <span className="message-sender">{message.sender}</span>
+                            <span className="message-sender">{message.sender?.name || message.sender?.username || "Unknown"}</span>
                             <span className="message-time">{message.time}</span>
                           </div>
                         )}
                         <div className="message-bubble">
-                          {/* Reaction bar */}
-                          <div className="react-bar">
-                            {EMOJI_SET.map(e => (
-                              <button key={e} className="react-btn" onClick={() => handleReact(message.id, e)}>
-                                {e}
-                              </button>
-                            ))}
-                          </div>
                           <p>{message.text}</p>
                         </div>
-                        {/* Reactions display */}
-                        {Object.keys(message.reactions || {}).length > 0 && (
-                          <div className="reactions">
-                            {Object.entries(message.reactions).map(([emoji, data]) => (
-                              <button
-                                key={emoji}
-                                className={`reaction-chip ${data.mine ? "mine" : ""}`}
-                                onClick={() => handleReact(message.id, emoji)}
-                              >
-                                <span>{emoji}</span>
-                                <span className="reaction-count">{data.count}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </div>
                   );
                 })}
-
-                {/* Typing */}
-                {isTyping && (
-                  <div className="typing-indicator">
-                    {activeRoom.type === "dm" && activatedRoom?.avatar && (
-                      <img src={activatedRoom.avatar} alt="" style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0 }} />
-                    )}
-                    <div className="typing-bubbles">
-                      <span className="typing-dot" />
-                      <span className="typing-dot" />
-                      <span className="typing-dot" />
-                    </div>
-                    <span className="typing-label">
-                      {activeRoom.type === "channel" ? "Bot" : activatedRoom?.name} is typing…
-                    </span>
-                  </div>
-                )}
-
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Jump to bottom pill */}
-              <button
-                className={`jump-pill ${showJumpPill ? "visible" : ""}`}
-                onClick={scrollToBottom}
-              >
+              <button className={`jump-pill ${showJumpPill ? "visible" : ""}`} onClick={scrollToBottom}>
                 ↓ Jump to latest
               </button>
 
@@ -634,44 +488,105 @@ export default function Rooms() {
                 {showEmojiPicker && (
                   <div className="emoji-picker">
                     {QUICK_EMOJIS.map(e => (
-                      <button key={e} type="button" className="emoji-btn" onClick={() => addEmoji(e)}>
-                        {e}
-                      </button>
+                      <button key={e} type="button" className="emoji-btn" onClick={() => addEmoji(e)}>{e}</button>
                     ))}
                   </div>
                 )}
                 <div className="input-wrapper">
-                  <button
-                    type="button"
-                    className="input-action-btn"
-                    onClick={() => setShowEmojiPicker(p => !p)}
-                    title="Emoji"
-                  >
-                    😊
-                  </button>
+                  <button type="button" className="input-action-btn" onClick={() => setShowEmojiPicker(p => !p)}>😊</button>
                   <textarea
                     className="message-input"
-                    placeholder={`Message ${activeRoom.type === "channel" ? "#" + (activatedRoom?.name || "general") : activatedRoom?.name || ""}…`}
+                    placeholder={`Message ${activeRoom.type === "channel" ? activatedRoom?.name : activatedRoom?.name}…`}
                     value={inputValue}
                     onChange={e => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     ref={inputRef}
                     rows={1}
                   />
-                  <button
-                    type="button"
-                    className={`send-btn ${inputValue.trim() ? "active" : ""}`}
-                    onClick={handleSend}
-                    title="Send"
-                  >
-                    ➤
-                  </button>
+                  <button type="button" className={`send-btn ${inputValue.trim() ? "active" : ""}`} onClick={handleSend}>➤</button>
                 </div>
               </div>
             </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-3)' }}>
+                Select a room or DM to start chatting
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* MODALS */}
+      {showGroupModal && (
+        <div className="modal-overlay" onClick={() => setShowGroupModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Create a Group</h2>
+              <p>Start a new community or project team.</p>
+            </div>
+            <form onSubmit={submitCreateGroup} className="modal-body">
+              <label>Group Name <input type="text" required value={newGroupForm.name} onChange={e => setNewGroupForm(p => ({...p, name: e.target.value}))} /></label>
+              <label>Description <input type="text" value={newGroupForm.description} onChange={e => setNewGroupForm(p => ({...p, description: e.target.value}))} /></label>
+              <label>Icon (Emoji) <input type="text" maxLength={2} value={newGroupForm.icon} onChange={e => setNewGroupForm(p => ({...p, icon: e.target.value}))} /></label>
+              
+              <label>Add Members
+                <input type="text" placeholder="Search by name..." value={newGroupForm.memberSearch} onChange={e => setNewGroupForm(p => ({...p, memberSearch: e.target.value}))} />
+              </label>
+              {newGroupResults.length > 0 && (
+                <div style={{ maxHeight: 100, overflowY: 'auto', background: 'var(--bg-deep)', borderRadius: 8, padding: 4 }}>
+                  {newGroupResults.map(u => (
+                    <button type="button" key={u._id} className="search-result-item" onClick={() => {
+                      if (!newGroupForm.selectedMembers.find(m => m._id === u._id)) {
+                        setNewGroupForm(p => ({ ...p, selectedMembers: [...p.selectedMembers, u], memberSearch: "" }));
+                      }
+                    }}>
+                      <img src={u.avatar} alt={u.name} />
+                      <span className="name">{u.name || u.username}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {newGroupForm.selectedMembers.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {newGroupForm.selectedMembers.map(m => (
+                    <div key={m._id} style={{ background: 'var(--primary)', color: 'white', padding: '4px 8px', borderRadius: 12, fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {m.name || m.username}
+                      <button type="button" style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }} onClick={() => setNewGroupForm(p => ({ ...p, selectedMembers: p.selectedMembers.filter(sm => sm._id !== m._id) }))}>×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="modal-footer">
+                <button type="button" className="btn-cancel" onClick={() => setShowGroupModal(false)}>Cancel</button>
+                <button type="submit" className="btn-submit">Create Group</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showBoardModal && (
+        <div className="modal-overlay" onClick={() => setShowBoardModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Create a Board</h2>
+              <p>Add a new topic to {selectedGroup?.name}</p>
+            </div>
+            <form onSubmit={submitCreateBoard} className="modal-body">
+              <label>Board Name <input type="text" required value={newBoardForm.name} onChange={e => setNewBoardForm(p => ({...p, name: e.target.value}))} /></label>
+              <label>Topic <input type="text" value={newBoardForm.topic} onChange={e => setNewBoardForm(p => ({...p, topic: e.target.value}))} /></label>
+              <label>Icon (Emoji) <input type="text" maxLength={2} value={newBoardForm.icon} onChange={e => setNewBoardForm(p => ({...p, icon: e.target.value}))} /></label>
+              
+              <div className="modal-footer">
+                <button type="button" className="btn-cancel" onClick={() => setShowBoardModal(false)}>Cancel</button>
+                <button type="submit" className="btn-submit">Create Board</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </section>
   );
 }

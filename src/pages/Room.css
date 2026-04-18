@@ -1102,4 +1102,125 @@
   .chat-header { padding: 10px 12px; }
   .messages-container { padding: 10px 12px; }
   .chat-input-area { padding: 8px 10px 12px; }
+}/* --- MODALS --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  width: 400px;
+  max-width: 90vw;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-1);
+}
+.modal-header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.modal-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+.modal-body input {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-light);
+  color: var(--text-1);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+}
+.modal-body input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+.btn-cancel {
+  background: transparent;
+  color: var(--text-2);
+  border: none;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  border-radius: 8px;
+}
+.btn-cancel:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-1);
+}
+.btn-submit {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+.btn-submit:hover {
+  filter: brightness(1.1);
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+.search-result-item:hover {
+  background: var(--bg-deep);
+}
+.search-result-item img {
+  width: 32px; height: 32px; border-radius: 50%;
+}
+.search-result-item .name {
+  color: var(--text-1);
+  font-weight: 500;
+  font-size: 14px;
+  display: block;
+}
+.search-result-item .username {
+  color: var(--text-3);
+  font-size: 12px;
+  display: block;
 }
