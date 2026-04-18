@@ -7,6 +7,8 @@ const QUICK_REPLIES = ["That sounds awesome! 🎉", "Got it, thanks! 👍", "I'l
 const EMOJI_SET = ["👍", "❤️", "😂", "🔥", "🎉", "👀"];
 const QUICK_EMOJIS = ["😊", "😂", "👍", "🔥", "🎉", "💬", "❤️", "🚀"];
 
+import logoSvg from "../assets/logo.svg";
+
 /* ─── HELPERS ─── */
 const getCurrentTime = () => {
   const now = new Date();
@@ -271,7 +273,9 @@ export default function Rooms({ user }) {
         <aside className="sidebar">
           {/* Primary strip */}
           <div className="sidebar-primary">
-            <div className="sidebar-logo">⚡</div>
+            <div className="sidebar-logo">
+              <img src={logoSvg} alt="Logo" style={{ width: 28, height: 28, borderRadius: '50%' }} />
+            </div>
             <div className="group-list">
               {groups.map(group => (
                 <button

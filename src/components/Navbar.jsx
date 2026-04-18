@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
+import logoSvg from "../assets/logo.svg";
 import "./Navbar.css";
 
 export default function Navbar({ user, onLogout }) {
@@ -19,7 +20,7 @@ export default function Navbar({ user, onLogout }) {
       <div className="navbar-inner">
         <NavLink to="/" className="navbar-brand" onClick={closeMenu}>
           <div className="brand-mark">
-            <span>C</span>
+            <img src={logoSvg} alt="Logo" style={{ width: 24, height: 24, borderRadius: '50%' }} />
           </div>
           <div className="brand-text">
             <span className="brand-name">ChatApp</span>
