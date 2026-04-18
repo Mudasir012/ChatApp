@@ -14,12 +14,14 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.36.0",
+    "connect-mongo": "^5.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-session": "^1.17.3",
     "mongoose": "^9.4.1",
-    "nodemailer": "^6.9.4"
+    "nodemailer": "^6.9.4",
+    "serverless-http": "^3.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

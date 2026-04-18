@@ -108,6 +108,28 @@ npm run dev
 
 Your app should now be running at `http://localhost:5173`! ⚡
 
+### 4. Deploying to Vercel
+
+This repository is ready to deploy to Vercel as a monorepo with a static frontend and a serverless backend.
+
+1. Connect the repository to Vercel.
+2. Use the root `package.json` for the frontend build.
+3. Vercel will use `api/index.cjs` as the serverless backend entrypoint.
+4. Add the backend environment variables in your Vercel project settings:
+
+```text
+MONGO_URL
+SESSION_SECRET
+CLOUDINARY_CLOUD_NAME
+CLOUDINARY_API_KEY
+CLOUDINARY_API_SECRET
+EMAIL_USER
+EMAIL_PASS
+CLIENT_ORIGIN
+```
+
+When deployed, your frontend will be served from Vercel and all `/api/*` requests will route to the backend function.
+
 <br />
 
 ---
