@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 const createRequest = async (path, options = {}) => {
   const headers = options.headers ? { ...options.headers } : {};

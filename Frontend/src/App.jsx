@@ -15,10 +15,7 @@ function App() {
   const [loading, setLoading] = useState(Boolean(getStoredUser()));
 
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
 
     fetchMe()
       .then((freshUser) => setUser(freshUser))
@@ -27,7 +24,7 @@ function App() {
         setUser(null);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   if (loading) {
     return <div className="page-content">Loading...</div>;

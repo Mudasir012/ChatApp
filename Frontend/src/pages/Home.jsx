@@ -34,7 +34,7 @@ export default function Home({ user }) {
             <div className="hero-actions animate-fade-up" style={{ animationDelay: "240ms" }}>
               <NavLink to={user ? "/rooms" : "/signin"} className="btn-primary">
                 {user ? "Explore Rooms" : "Sign in to join"}
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                   <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </NavLink>
@@ -45,7 +45,7 @@ export default function Home({ user }) {
 
             <div className="social-proof animate-fade-up" style={{ animationDelay: "320ms" }}>
               <div className="avatars-stack">
-                {["#7c3aed", "#2563eb", "#059669", "#d97706", "#dc2626"].map((bg, i) => (
+                {["#4a3fa8", "#1e4f96", "#1e6650", "#7a5a1a", "#7a2e2e"].map((bg, i) => (
                   <div key={i} className="sp-avatar" style={{ background: bg, zIndex: 5 - i }}>
                     {["N", "J", "A", "R", "M"][i]}
                   </div>
@@ -69,11 +69,11 @@ export default function Home({ user }) {
                 <div className="card-title"># general</div>
                 <div className="card-sub">chatApp · 1,204 members</div>
                 <div className="msg-preview">
-                  <div className="msg-sender" style={{ color: "#a78bfa" }}>@nova</div>
+                  <div className="msg-sender" style={{ color: "#a09ae8" }}>@nova</div>
                   <div className="msg-text">anyone tried the new voice rooms? they're actually so clean 🔥</div>
                 </div>
                 <div className="avatars-row">
-                  {[["#7c3aed","N"],["#2563eb","J"],["#059669","A"],["#d97706","R"]].map(([bg,l],i) => (
+                  {[["#4a3fa8","N"],["#1e4f96","J"],["#1e6650","A"],["#7a5a1a","R"]].map(([bg,l],i) => (
                     <div key={i} className="mini-avatar" style={{ background: bg }}>{l}</div>
                   ))}
                   <div className="online-dot" />
@@ -81,7 +81,7 @@ export default function Home({ user }) {
                 </div>
                 <div className="divider" />
                 <div className="card-footer">
-                  <div className="pill"><span className="status-dot" style={{ background: "#a78bfa" }} /> Active</div>
+                  <div className="pill"><span className="status-dot" style={{ background: "#a09ae8" }} /> Active</div>
                   <span className="timestamp">just now</span>
                 </div>
               </div>
@@ -95,18 +95,18 @@ export default function Home({ user }) {
                 <div className="card-title">Voice · lounge</div>
                 <div className="card-sub">Stage channel · ongoing</div>
                 <div className="msg-preview">
-                  <div className="msg-sender" style={{ color: "#34d399" }}>Speaking now</div>
+                  <div className="msg-sender" style={{ color: "#6ee0b4" }}>Speaking now</div>
                   <div className="msg-text">@kai is sharing screen — "React 19 deep dive" talk</div>
                 </div>
                 <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: "62%", background: "linear-gradient(90deg,#34d399,#059669)" }} />
+                  <div className="progress-fill" style={{ width: "62%", background: "linear-gradient(90deg, #2d7a5f, #1e4e3a)" }} />
                 </div>
                 <div className="progress-labels">
                   <span>37 min in</span><span>~60 min total</span>
                 </div>
                 <div className="divider" />
                 <div className="card-footer">
-                  <div className="pill"><span className="status-dot" style={{ background: "#34d399" }} /> 9 listening</div>
+                  <div className="pill"><span className="status-dot" style={{ background: "#6ee0b4" }} /> 9 listening</div>
                   <span className="timestamp">Live</span>
                 </div>
               </div>
@@ -120,18 +120,18 @@ export default function Home({ user }) {
                 <div className="card-title">Mentions</div>
                 <div className="card-sub">You were tagged · today</div>
                 <div className="msg-preview">
-                  <div className="msg-sender" style={{ color: "#f87171" }}>@marco in #dev-chat</div>
+                  <div className="msg-sender" style={{ color: "#f4a0a0" }}>@marco in #dev-chat</div>
                   <div className="msg-text">hey @you can you review the PR before EOD?</div>
                 </div>
                 <div className="avatars-row">
-                  {[["#dc2626","M"],["#7c3aed","S"],["#0891b2","T"]].map(([bg,l],i) => (
+                  {[["#7a2e2e","M"],["#4a3fa8","S"],["#1e4f96","T"]].map(([bg,l],i) => (
                     <div key={i} className="mini-avatar" style={{ background: bg, width: 20, height: 20, fontSize: 8 }}>{l}</div>
                   ))}
                   <span className="members-label">+2 more mentions</span>
                 </div>
                 <div className="divider" />
                 <div className="card-footer">
-                  <div className="pill"><span className="status-dot" style={{ background: "#f87171" }} /> Unread</div>
+                  <div className="pill"><span className="status-dot" style={{ background: "#f4a0a0" }} /> Unread</div>
                   <span className="timestamp">2 hrs ago</span>
                 </div>
               </div>
@@ -145,18 +145,18 @@ export default function Home({ user }) {
                 <div className="card-title">Your server</div>
                 <div className="card-sub">chatApp HQ · owner</div>
                 <div className="msg-preview">
-                  <div className="msg-sender" style={{ color: "#fbbf24" }}>Server health</div>
+                  <div className="msg-sender" style={{ color: "#f0c070" }}>Server health</div>
                   <div className="msg-text">All systems normal · 0 flagged messages today</div>
                 </div>
                 <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: "88%", background: "linear-gradient(90deg,#f59e0b,#d97706)" }} />
+                  <div className="progress-fill" style={{ width: "88%", background: "linear-gradient(90deg, #b07a2a, #7a5a1a)" }} />
                 </div>
                 <div className="progress-labels">
                   <span>2,841 members</span><span>88% retention</span>
                 </div>
                 <div className="divider" />
                 <div className="card-footer">
-                  <div className="pill"><span className="status-dot" style={{ background: "#fbbf24" }} /> Owner</div>
+                  <div className="pill"><span className="status-dot" style={{ background: "#f0c070" }} /> Owner</div>
                   <span className="timestamp">thriving</span>
                 </div>
               </div>
@@ -173,12 +173,12 @@ export default function Home({ user }) {
 
           <div className="features-grid">
             {[
-              { icon: "💬", color: "#7c3aed", title: "Text Rooms", desc: "Organised channels with threads, reactions, file sharing, and powerful search." },
-              { icon: "🎙️", color: "#059669", title: "Voice & Stage", desc: "Crystal-clear voice rooms with screen sharing and live audience tools." },
-              { icon: "🎬", color: "#d97706", title: "Watch Parties", desc: "Sync video playback with friends in real-time. React together, no spoilers." },
-              { icon: "🛡️", color: "#dc2626", title: "Mod Tools", desc: "Auto-moderation, custom roles, permission levels and detailed audit logs." },
-              { icon: "🔔", color: "#0891b2", title: "Smart Alerts", desc: "Granular notification controls so you only hear what actually matters." },
-              { icon: "🌐", color: "#9333ea", title: "Global CDN", desc: "Low-latency delivery in 30+ regions. Fast wherever your community is." },
+              { icon: "💬", color: "#5b4fcf", title: "Text Rooms", desc: "Organised channels with threads, reactions, file sharing, and powerful search." },
+              { icon: "🎙️", color: "#2d7a5f", title: "Voice & Stage", desc: "Crystal-clear voice rooms with screen sharing and live audience tools." },
+              { icon: "🎬", color: "#b07a2a", title: "Watch Parties", desc: "Sync video playback with friends in real-time. React together, no spoilers." },
+              { icon: "🛡️", color: "#8a3a3a", title: "Mod Tools", desc: "Auto-moderation, custom roles, permission levels and detailed audit logs." },
+              { icon: "🔔", color: "#2a5fa8", title: "Smart Alerts", desc: "Granular notification controls so you only hear what actually matters." },
+              { icon: "🌐", color: "#4a3fa8", title: "Global CDN", desc: "Low-latency delivery in 30+ regions. Fast wherever your community is." },
             ].map(({ icon, color, title, desc }, i) => (
               <div key={i} className="feature-card">
                 <div className="feature-icon" style={{ background: color + "22", color }}>{icon}</div>
@@ -214,14 +214,18 @@ export default function Home({ user }) {
           <div className="cta-orb cta-orb-b" />
         </div>
         <div className="cta-content">
-          <h2 className="cta-title">Ready to find your community?</h2>
-          <p className="cta-sub">Jump into a room, start a server, or just lurk. No pressure.</p>
-          <NavLink to={user ? "/rooms" : "/signin"} className="btn-primary btn-large">
-            {user ? "Get started — it's free" : "Sign in to start"}
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </NavLink>
+          <div className="cta-text">
+            <h2 className="cta-title">Ready to find your community?</h2>
+            <p className="cta-sub">Jump into a room, start a server, or just lurk. No pressure.</p>
+          </div>
+          <div className="cta-action">
+            <NavLink to={user ? "/rooms" : "/signin"} className="btn-primary btn-large">
+              {user ? "Get started — it's free" : "Sign in to start"}
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </NavLink>
+          </div>
         </div>
       </section>
     </>
